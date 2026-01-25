@@ -38,3 +38,11 @@
         reg = <0x5a>;
     };
 };
+
+/ {
+    /* SDA/SCLをGPIOとして直接叩くためのエイリアス */
+    zephyr,user {
+        sda-gpios = <&gpio0 4 GPIO_ACTIVE_HIGH>;
+        scl-gpios = <&gpio0 5 GPIO_ACTIVE_HIGH>;
+    };
+};
