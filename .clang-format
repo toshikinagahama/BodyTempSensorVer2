@@ -1,0 +1,41 @@
+BasedOnStyle: LLVM
+
+BreakBeforeBraces: Allman
+
+ColumnLimit: 100
+
+# インデントにタブを使用
+#UseTab: Always
+IndentWidth: 4
+TabWidth: 4
+
+# = を縦に揃える（代入演算子の整列）
+AlignConsecutiveAssignments: true
+
+# コメントを縦に揃える
+AlignTrailingComments: true
+
+# 無駄な空行を制限する（最大1行まで、など）
+MaxEmptyLinesToKeep: 1
+
+# その他、細かい調整
+AllowShortFunctionsOnASingleLine: None
+
+PointerAlignment: Right
+AlignConsecutiveDeclarations: true
+IndentCaseLabels: true
+
+SortIncludes: true
+IncludeBlocks: Regroup
+
+# 改行が続く場合（引数の途中など）のインデントを 4 に固定
+ContinuationIndentWidth: 4
+
+# コンストラクタ初期化リストなどのインデントも念のため固定
+ConstructorInitializerIndentWidth: 4
+
+# アクセス修飾子（public: 等）のオフセットを 0 に（LLVMのデフォルトは -2 なので 4-2=2 になるのを防ぐ）
+AccessModifierOffset: -4
+
+# 念のため、意図しない自動検出を防ぐ
+DerivePointerAlignment: false

@@ -1,0 +1,18 @@
+{
+  //"C_Cpp.default.compileCommands": "${workspaceFolder}/build/compile_commands.json",
+  "C_Cpp.formatting": "clangFormat",
+
+  // ".clang-format" ファイルを探して使う設定
+  "C_Cpp.clang_format_style": "file",
+
+  // もしファイルが見つからなかった時の予備スタイル（任意）
+  "C_Cpp.clang_format_fallbackStyle": "Google",
+
+  // 保存時に自動でフォーマットしたい場合はこれも
+  "editor.formatOnSave": true,
+
+  // C言語専用の既定フォーマッター指定
+  "[c]": {
+    "editor.defaultFormatter": "ms-vscode.cpptools"
+  }
+}
