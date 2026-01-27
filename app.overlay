@@ -1,37 +1,29 @@
 &pinctrl {
-    /* 動作時（default）のピン設定 */
-    i2c0_default: i2c0_default {
+    i2c1_default: i2c1_default {
         group1 {
-            /* P0.04をSDA、P0.05をSCLとして定義 */
             psels = <NRF_PSEL(TWIM_SDA, 0, 4)>,
                     <NRF_PSEL(TWIM_SCL, 0, 5)>;
-            /* I2Cはオープンドレインなのでプルアップが必須 */
             bias-pull-up;
         };
     };
 
-    /* 低消費電力（sleep）時のピン設定 */
-    i2c0_sleep: i2c0_sleep {
+    i2c1_sleep: i2c1_sleep {
         group1 {
             psels = <NRF_PSEL(TWIM_SDA, 0, 4)>,
                     <NRF_PSEL(TWIM_SCL, 0, 5)>;
-            /* スリープ時は低消費電力モードを有効化 */
             low-power-enable;
         };
     };
 };
 
-&i2c0 {
+&i2c1 {
      compatible = "nordic,nrf-twim";
-     /* Cannot be used together with spi0. */
      status = "okay";
-     pinctrl-0 = <&i2c0_default>;
-     pinctrl-1 = <&i2c0_sleep>;
+     pinctrl-0 = <&i2c1_default>;
+     pinctrl-1 = <&i2c1_sleep>;
      pinctrl-names = "default", "sleep";
      clock-frequency = <100000>;
 
-
-    /* 汎用的なI2Cデバイスとして定義 */
     mlx_sensor: mlx90614@5a {
         status = "okay";
         compatible = "i2c-device";
@@ -40,9 +32,14 @@
 };
 
 / {
-    /* SDA/SCLをGPIOとして直接叩くためのエイリアス */
     zephyr,user {
         sda-gpios = <&gpio0 4 GPIO_ACTIVE_HIGH>;
         scl-gpios = <&gpio0 5 GPIO_ACTIVE_HIGH>;
     };
 };
+
+/*
+&qspi {
+    status = "disabled";
+};
+*/
