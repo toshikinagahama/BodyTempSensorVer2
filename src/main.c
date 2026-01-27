@@ -157,6 +157,9 @@ int main(void)
     {
         DEBUG_PRINT("Drivers ready\n");
     }
+    // BLEの消費電流を見たいので一回mlxを眠らせる
+    mlx90614_enter_sleep(&i2c_mlx90614, &scl_gpio, &sda_gpio); // センサーをスリープへ
+    k_msleep(4000);                                            // 3秒待機
 
     // 2. Bluetoothの有効化
     int err = bt_enable(NULL);
