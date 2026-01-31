@@ -22,12 +22,29 @@
      pinctrl-0 = <&i2c1_default>;
      pinctrl-1 = <&i2c1_sleep>;
      pinctrl-names = "default", "sleep";
+     zephyr,concat-buf-size = <2048>;
      clock-frequency = <100000>;
 
     mlx_sensor: mlx90614@5a {
         status = "okay";
         compatible = "i2c-device";
         reg = <0x5a>;
+    };
+
+    ssd1306: ssd1306@3c {
+        status = "okay";
+        compatible = "solomon,ssd1306fb";
+        reg = <0x3c>;
+        width = <128>;
+        height = <32>;
+        segment-offset = <0>;
+        page-offset = <0>;
+        display-offset = <0>;
+        multiplex-ratio = <31>;
+        segment-remap;
+        com-invdir;
+        com-sequential;
+        prechargep = <0x22>;
     };
 };
 
@@ -37,6 +54,61 @@
         scl-gpios = <&gpio0 5 GPIO_ACTIVE_HIGH>;
     };
 };
+
+/* 
+/ {
+    i2c_gpio0: i2c-gpio-0 {
+        compatible = "gpio-i2c";
+        status = "okay";
+        sda-gpios = <&gpio0 28 (GPIO_ACTIVE_HIGH | GPIO_PULL_UP)>;
+        scl-gpios = <&gpio0 29 (GPIO_ACTIVE_HIGH | GPIO_PULL_UP)>;
+        clock-frequency = <I2C_BITRATE_STANDARD>; // 100kHz
+        #address-cells = <1>;
+        #size-cells = <0>;
+
+        mlx_sensor: mlx90614@5a {
+            status = "okay";
+            compatible = "i2c-device";
+            reg = <0x5a>;
+        };
+    };
+
+    zephyr,user {
+        mlx-sda-gpios = <&gpio0 28 GPIO_ACTIVE_HIGH>;
+        mlx-scl-gpios = <&gpio0 29 GPIO_ACTIVE_HIGH>;
+    };
+};
+*/
+
+/*  
+&pinctrl {
+    i2c0_default: i2c0_default {
+        group1 {
+            psels = <NRF_PSEL(TWIM_SDA, 0, 28)>, 
+                    <NRF_PSEL(TWIM_SCL, 0, 29)>;
+            bias-pull-up;
+        };
+    };
+    i2c0_sleep: i2c0_sleep {
+        group1 {
+            psels = <NRF_PSEL(TWIM_SDA, 0, 28)>,
+                    <NRF_PSEL(TWIM_SCL, 0, 29)>;
+            low-power-enable;
+        };
+    };
+};
+*/
+
+/* 
+&i2c0 {
+    status = "okay";
+    pinctrl-0 = <&i2c1_default>;
+    pinctrl-1 = <&i2c1_sleep>;
+    pinctrl-names = "default", "sleep";
+    clock-frequency = <100000>;
+
+};
+*/
 
 /*
 &qspi {

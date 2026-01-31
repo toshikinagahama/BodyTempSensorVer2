@@ -1,4 +1,4 @@
-// #define DEBUG
+#define DEBUG
 #ifdef DEBUG
 /* DEBUGが定義されている時は通常のprintfとして動作 */
 #include <zephyr/sys/printk.h>
