@@ -23,11 +23,11 @@ int mlx90614_enter_sleep(const struct i2c_dt_spec *dev_i2c, const struct gpio_dt
     int     ret    = i2c_write_dt(dev_i2c, data, sizeof(data));
 
     k_msleep(2); // コマンド処理待ち
-    pm_device_action_run(dev_i2c->bus, PM_DEVICE_ACTION_SUSPEND);
+    // pm_device_action_run(dev_i2c->bus, PM_DEVICE_ACTION_SUSPEND);
     k_msleep(1); // コマンド処理待ち
 
-    gpio_pin_configure_dt(scl_gpio, GPIO_DISCONNECTED);
-    gpio_pin_configure_dt(sda_gpio, GPIO_DISCONNECTED);
+    // gpio_pin_configure_dt(scl_gpio, GPIO_DISCONNECTED);
+    // gpio_pin_configure_dt(sda_gpio, GPIO_DISCONNECTED);
 
     return ret;
 }

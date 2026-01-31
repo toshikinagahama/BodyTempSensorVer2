@@ -15,9 +15,9 @@
 
 // 周辺機器定義
 static const struct i2c_dt_spec  i2c_mlx90614 = I2C_DT_SPEC_GET(DT_NODELABEL(mlx_sensor));
-static const struct gpio_dt_spec sda_gpio     = GPIO_DT_SPEC_GET(DT_PATH(zephyr_user), sda_gpios);
-static const struct gpio_dt_spec scl_gpio     = GPIO_DT_SPEC_GET(DT_PATH(zephyr_user), scl_gpios);
-const struct device             *display_dev  = DEVICE_DT_GET(DT_NODELABEL(ssd1306));
+static const struct gpio_dt_spec sda_gpio = GPIO_DT_SPEC_GET(DT_PATH(zephyr_user), mlx_sda_gpios);
+static const struct gpio_dt_spec scl_gpio = GPIO_DT_SPEC_GET(DT_PATH(zephyr_user), mlx_scl_gpios);
+const struct device             *display_dev = DEVICE_DT_GET(DT_NODELABEL(ssd1306));
 
 uint8_t is_ready_drivers(void)
 {
@@ -69,26 +69,28 @@ int main(void)
     display_blanking_on(display_dev);
 
     /* 4. フォントを設定して表示 */
+    cfb_framebuffer_set_font(display_dev, 0);
 
     uint8_t cnt = 0;
     while (1)
     {
-        cfb_framebuffer_set_font(display_dev, 0);
-        // mlx90614_exit_sleep(&i2c_mlx90614, &scl_gpio, &sda_gpio);
+        mlx90614_exit_sleep(&i2c_mlx90614, &scl_gpio, &sda_gpio);
         float env = mlx90614_read_env_temp(&i2c_mlx90614);
         float obj = mlx90614_read_obj_temp(&i2c_mlx90614);
+        mlx90614_enter_sleep(&i2c_mlx90614, &scl_gpio, &sda_gpio); // センサーをスリープへ
+        DEBUG_PRINT("Object Temp: %.2f C, Env Temp: %.2f C \n", obj, env);
 
         char buf[64]; // 表示用のバッファ
         // 1. バッファに文字列を書き込む
         snprintf(buf, sizeof(buf), "Obj:%.2fC Env:%.2fC", (double)obj, (double)env);
+        // snprintf(buf, sizeof(buf), "cnt: %d", cnt);
         // 2. 表示（cfb_printは文字列を受け取る）
         cfb_framebuffer_clear(display_dev, false);
         cfb_print(display_dev, buf, 0, 0);
         cfb_framebuffer_finalize(display_dev);
-        display_blanking_on(display_dev);
-        k_msleep(1000);
         display_blanking_off(display_dev);
-        mlx90614_enter_sleep(&i2c_mlx90614, &scl_gpio, &sda_gpio); // センサーをスリープへ
+        k_msleep(1000);
+        display_blanking_on(display_dev);
         k_msleep(1000);
         cnt++;
     }
