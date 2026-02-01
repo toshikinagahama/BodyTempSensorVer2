@@ -46,28 +46,37 @@ void my_timer_stop_all(void)
     k_timer_stop(&timer10s);
 }
 
-/**
- * @brief 計測用タイマーの開始
- */
-void my_timer_start_meas(void)
+void my_timer1_start(void)
+{
+    k_timer_start(&timer1, K_MSEC(TIMER1_INTERVAL_MS),
+                  K_MSEC(TIMER1_INTERVAL_MS));
+}
+
+void my_timer1_stop(void)
+{
+    k_timer_stop(&timer1);
+}
+
+void my_timer2_start(void)
 {
     k_timer_start(&timer2, K_MSEC(TIMER2_INTERVAL_MS),
                   K_MSEC(TIMER2_INTERVAL_MS));
-    // 10秒後に1回だけ実行、または周期実行
-    k_timer_start(&timer10s, K_MSEC(TIMER10S_INTERVAL_MS),
-                  K_MSEC(TIMER10S_INTERVAL_MS));
-
-    DEBUG_PRINT("Measurement timers started\n");
 }
 
-/**
- * @brief 周期通知用タイマーの開始
- */
-void my_timer_start_periodic(void)
+void my_timer2_stop(void)
 {
-    // 1秒周期で開始
-    k_timer_start(&timer1, K_MSEC(TIMER1_INTERVAL_MS),
-                  K_MSEC(TIMER1_INTERVAL_MS));
+    k_timer_stop(&timer2);
+}
+
+void my_timer10s_start(void)
+{
+    k_timer_start(&timer10s, K_MSEC(TIMER10S_INTERVAL_MS),
+                  K_MSEC(TIMER10S_INTERVAL_MS));
+}
+
+void my_timer10s_stop(void)
+{
+    k_timer_stop(&timer10s);
 }
 
 /**
@@ -75,6 +84,6 @@ void my_timer_start_periodic(void)
  */
 void my_timer_init(void)
 {
-    // my_timer_stop_all();
-    my_timer_start_periodic();
+    my_timer_stop_all();
+    // my_timer1_start();
 }

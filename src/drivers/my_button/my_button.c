@@ -85,15 +85,19 @@ void handle_button_event(const struct gpio_dt_spec *spec, int64_t *last_time,
     }
     else
     {
-        /* 離された瞬間 (Inactive) */
-        struct k_work_sync sync;
-        // 2秒経つ前に離されたら「短押し」確定
-        if (k_work_cancel_delayable_sync(work2s, &sync))
+        // DEBUG_PRINT("Button released: port %p pin %d\n", spec->port,
+        // spec->pin);
+        k_work_cancel_delayable(work2s);
+        k_work_cancel_delayable(work10s);
+
+        // 【確実な判定】離した時間 - 押した時間
+        // が「30ms以上〜2秒未満」なら短押し！
+        int64_t press_duration = now - *last_time;
+
+        if (press_duration >= 30 && press_duration < 2000)
         {
             enqueue(short_evt, NULL, 0);
         }
-        // 5秒タイマーもキャンセル
-        k_work_cancel_delayable_sync(work10s, &sync);
     }
 }
 
@@ -138,9 +142,9 @@ void my_button_init()
     // 割り込み設定: 押し・離し両検知
     gpio_init_callback(&button0_cb_data, button0_changed, BIT(button0.pin));
     gpio_add_callback(button0.port, &button0_cb_data);
-    gpio_pin_interrupt_configure_dt(&button0, GPIO_INT_EDGE_TO_ACTIVE);
+    gpio_pin_interrupt_configure_dt(&button0, GPIO_INT_EDGE_BOTH);
 
     gpio_init_callback(&button1_cb_data, button1_changed, BIT(button1.pin));
     gpio_add_callback(button1.port, &button1_cb_data);
-    gpio_pin_interrupt_configure_dt(&button1, GPIO_INT_EDGE_TO_ACTIVE);
+    gpio_pin_interrupt_configure_dt(&button1, GPIO_INT_EDGE_BOTH);
 }

@@ -33,6 +33,10 @@ static ssize_t read_temp(struct bt_conn *conn, const struct bt_gatt_attr *attr,
                              sizeof(temp_value));
 }
 
+static struct k_work_delayable le_param_work;
+
+static bool is_advertising = false;
+
 static struct bt_le_conn_param *connection_param = BT_LE_CONN_PARAM(
     400, // Min interval: 400 * 1.25ms = 500ms
     400, // Max interval: 400 * 1.25ms = 500ms
@@ -53,6 +57,7 @@ void start_advertising(void)
     }
     else
     {
+        is_advertising = true;
         DEBUG_PRINT("Advertising restarted\n");
     }
 }
@@ -66,8 +71,14 @@ void stop_advertising(void)
     }
     else
     {
+        is_advertising = false;
         DEBUG_PRINT("Advertising stopped\n");
     }
+}
+
+bool get_is_advertising(void)
+{
+    return is_advertising;
 }
 
 static ssize_t write_cmd(struct bt_conn *conn, const struct bt_gatt_attr *attr,
@@ -107,6 +118,21 @@ static ssize_t write_cmd(struct bt_conn *conn, const struct bt_gatt_attr *attr,
     }
     return len;
 }
+static void update_le_params(struct k_work *work)
+{
+    // 接続中の conn オブジェクトを保持している必要がありますが、
+    // 面倒な場合は NULL を渡すと全ての接続に対して更新を試みます。
+    bt_conn_le_param_update(NULL, connection_param);
+    DEBUG_PRINT("Sent late LE param update request\n");
+}
+static void le_param_updated(struct bt_conn *conn, uint16_t interval,
+                             uint16_t latency, uint16_t timeout)
+{
+    // interval が 400 (500ms) になっていれば成功！
+    // もし 24 (30ms) などのままであれば、スマホに拒否されています。
+    DEBUG_PRINT("LE params updated: interval %d, latency %d\n", interval,
+                latency);
+}
 
 /* ペアリング時のコールバック（必要に応じて） */
 static void connected(struct bt_conn *conn, uint8_t err)
@@ -118,7 +144,18 @@ static void connected(struct bt_conn *conn, uint8_t err)
     else
     {
         DEBUG_PRINT("Connected\n");
-        bt_conn_le_param_update(conn, connection_param);
+        // k_work_init_delayable(&le_param_work, update_le_params);
+        // k_work_schedule(&le_param_work, K_MSEC(2000));
+        int update_err = bt_conn_le_param_update(conn, connection_param);
+        if (update_err)
+        {
+            DEBUG_PRINT("Param update request failed (err %d)\n", update_err);
+        }
+        else
+        {
+            DEBUG_PRINT("Param update request sent!\n");
+        }
+        enqueue(EVT_BLE_CONNECTED, NULL, 0);
     }
 }
 
@@ -126,12 +163,13 @@ static void disconnected(struct bt_conn *conn, uint8_t reason)
 {
     DEBUG_PRINT("Disconnected, reason 0x%02x %s\n", reason,
                 bt_hci_err_to_str(reason));
-    stop_advertising();
+    enqueue(EVT_BLE_DISCONNECTED, NULL, 0);
 }
 
 BT_CONN_CB_DEFINE(conn_callbacks) = {
-    .connected    = connected,
-    .disconnected = disconnected,
+    .connected        = connected,
+    .disconnected     = disconnected,
+    .le_param_updated = le_param_updated,
 };
 
 /* ペアリング要求が来た時の応答設定 */
