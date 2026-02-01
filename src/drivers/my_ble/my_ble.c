@@ -14,21 +14,31 @@
 // アドバタイズデータの設定
 static const struct bt_data ad[] = {
     BT_DATA_BYTES(BT_DATA_FLAGS, (BT_LE_AD_GENERAL | BT_LE_AD_NO_BREDR)),
-    BT_DATA(BT_DATA_NAME_COMPLETE, CONFIG_BT_DEVICE_NAME, sizeof(CONFIG_BT_DEVICE_NAME) - 1),
+    BT_DATA(BT_DATA_NAME_COMPLETE, CONFIG_BT_DEVICE_NAME,
+            sizeof(CONFIG_BT_DEVICE_NAME) - 1),
 };
 /* カスタムサービスのUUID定義 (128bit) */
-static struct bt_uuid_128 temp_service_uuid =
-    BT_UUID_INIT_128(BT_UUID_128_ENCODE(0x12345678, 0x1234, 0x5678, 0x1234, 0x56789abcdef0));
+static struct bt_uuid_128 temp_service_uuid = BT_UUID_INIT_128(
+    BT_UUID_128_ENCODE(0x12345678, 0x1234, 0x5678, 0x1234, 0x56789abcdef0));
 
-static struct bt_uuid_128 temp_char_uuid =
-    BT_UUID_INIT_128(BT_UUID_128_ENCODE(0x12345678, 0x1234, 0x5678, 0x1234, 0x56789abcdef1));
+static struct bt_uuid_128 temp_char_uuid = BT_UUID_INIT_128(
+    BT_UUID_128_ENCODE(0x12345678, 0x1234, 0x5678, 0x1234, 0x56789abcdef1));
 
 /* 2. 読み取りコールバック */
-static ssize_t read_temp(struct bt_conn *conn, const struct bt_gatt_attr *attr, void *buf,
-                         uint16_t len, uint16_t offset)
+static ssize_t read_temp(struct bt_conn *conn, const struct bt_gatt_attr *attr,
+                         void *buf, uint16_t len, uint16_t offset)
 {
-    return bt_gatt_attr_read(conn, attr, buf, len, offset, &temp_value, sizeof(temp_value));
+    uint8_t temp_value = 36; // 例として36度を返す
+    return bt_gatt_attr_read(conn, attr, buf, len, offset, &temp_value,
+                             sizeof(temp_value));
 }
+
+static struct bt_le_conn_param *connection_param = BT_LE_CONN_PARAM(
+    400, // Min interval: 400 * 1.25ms = 500ms
+    400, // Max interval: 400 * 1.25ms = 500ms
+    4,   // Latency: スレーブ側が4回まで通信をスルーできる（さらに省エネ）
+    600  // Timeout: 400 * 10ms = 4000ms
+);
 
 void start_advertising(void)
 {
@@ -46,22 +56,39 @@ void start_advertising(void)
         DEBUG_PRINT("Advertising restarted\n");
     }
 }
-static ssize_t write_cmd(struct bt_conn *conn, const struct bt_gatt_attr *attr, const void *buf,
-                         uint16_t len, uint16_t offset, uint8_t flags);
+
+void stop_advertising(void)
+{
+    int err = bt_le_adv_stop();
+    if (err)
+    {
+        DEBUG_PRINT("Failed to stop advertising (err %d)\n", err);
+    }
+    else
+    {
+        DEBUG_PRINT("Advertising stopped\n");
+    }
+}
+
+static ssize_t write_cmd(struct bt_conn *conn, const struct bt_gatt_attr *attr,
+                         const void *buf, uint16_t len, uint16_t offset,
+                         uint8_t flags);
 /* カスタムサービスの定義 */
 BT_GATT_SERVICE_DEFINE(
-    my_temp_svc, BT_GATT_PRIMARY_SERVICE(&temp_service_uuid),
+    my_data_svc, BT_GATT_PRIMARY_SERVICE(&temp_service_uuid),
     /* 特徴量（読み取り可能 | 通知可能 | ペアリング/暗号化が必要） */
-    BT_GATT_CHARACTERISTIC(&temp_char_uuid.uuid,
-                           BT_GATT_CHRC_READ | BT_GATT_CHRC_WRITE | BT_GATT_CHRC_NOTIFY,
-                           BT_GATT_PERM_READ_ENCRYPT |
-                               BT_GATT_PERM_WRITE_ENCRYPT, // 読み取りにはペアリングが必要
-                           read_temp, write_cmd, &temp_value),
+    BT_GATT_CHARACTERISTIC(
+        &temp_char_uuid.uuid,
+        BT_GATT_CHRC_READ | BT_GATT_CHRC_WRITE | BT_GATT_CHRC_NOTIFY,
+        BT_GATT_PERM_READ_ENCRYPT |
+            BT_GATT_PERM_WRITE_ENCRYPT, // 読み取りにはペアリングが必要
+        read_temp, write_cmd, NULL),
     BT_GATT_CCC(NULL, BT_GATT_PERM_READ | BT_GATT_PERM_WRITE_ENCRYPT), );
 
 /* 書き込み時のコールバック関数（スマホからデータが届いたら呼ばれる） */
-static ssize_t write_cmd(struct bt_conn *conn, const struct bt_gatt_attr *attr, const void *buf,
-                         uint16_t len, uint16_t offset, uint8_t flags)
+static ssize_t write_cmd(struct bt_conn *conn, const struct bt_gatt_attr *attr,
+                         const void *buf, uint16_t len, uint16_t offset,
+                         uint8_t flags)
 {
     const uint8_t *data = buf;
 
@@ -77,7 +104,6 @@ static ssize_t write_cmd(struct bt_conn *conn, const struct bt_gatt_attr *attr, 
     DEBUG_PRINT("\n");
     if (len > 0 && data[0] == 0x01)
     { // 例えば「0x01」が届いたら温度測定
-        bt_gatt_notify(NULL, &my_temp_svc.attrs[2], &temp_value, sizeof(temp_value));
     }
     return len;
 }
@@ -92,13 +118,15 @@ static void connected(struct bt_conn *conn, uint8_t err)
     else
     {
         DEBUG_PRINT("Connected\n");
+        bt_conn_le_param_update(conn, connection_param);
     }
 }
 
 static void disconnected(struct bt_conn *conn, uint8_t reason)
 {
-    DEBUG_PRINT("Disconnected, reason 0x%02x %s\n", reason, bt_hci_err_to_str(reason));
-    should_restart_adv = 1;
+    DEBUG_PRINT("Disconnected, reason 0x%02x %s\n", reason,
+                bt_hci_err_to_str(reason));
+    stop_advertising();
 }
 
 BT_CONN_CB_DEFINE(conn_callbacks) = {
@@ -129,8 +157,7 @@ void my_ble_init(void)
     int err = bt_enable(NULL);
     if (err)
     {
-        printf("Bluetooth init failed (err %d)\n", err);
-        return 0;
+        return;
     }
     bt_conn_auth_cb_register(&auth_cb_display);
     bt_passkey_set(123456);
@@ -140,10 +167,9 @@ void my_ble_init(void)
         settings_load();
     }
 
-    printf("Bluetooth initialized\n");
-    start_advertising();
+    // start_advertising();
 }
-void my_ble_notify(void)
+void my_ble_notify(void *data, size_t size)
 {
-    bt_gatt_notify(NULL, &my_temp_svc.attrs[2], &temp_value, sizeof(temp_value));
+    bt_gatt_notify(NULL, &my_data_svc.attrs[2], data, size);
 }

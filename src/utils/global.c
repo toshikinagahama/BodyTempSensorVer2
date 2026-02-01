@@ -6,8 +6,6 @@
 #include <zephyr/kernel.h>
 
 K_SEM_DEFINE(evt_sem, 0, 1);
-uint8_t should_restart_adv = 0;
-uint8_t temp_value         = 0; // 送信する温度データ（例）
 
 my_event event_queue[QUEUE_SIZE]; // イベントキュー
 int      head  = 0;

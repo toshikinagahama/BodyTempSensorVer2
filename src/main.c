@@ -7,6 +7,7 @@
 #include "my_handler.h"
 #include "my_timer.h"
 
+#include <zephyr/arch/cpu.h>
 #include <zephyr/drivers/flash.h>
 #include <zephyr/drivers/gpio.h>
 #include <zephyr/kernel.h>
@@ -82,7 +83,7 @@ void drivers_init()
     my_display_init();
     my_button_init();
     my_timer_init();
-    // my_ble_init();
+    my_ble_init();
     test_qspi_flash();
     read_qspi_data();
     pm_device_action_run(

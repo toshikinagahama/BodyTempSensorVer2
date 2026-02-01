@@ -8,15 +8,18 @@
 #include <zephyr/pm/device.h>
 
 // デバイス定義
-static const struct i2c_dt_spec  dev_i2c  = I2C_DT_SPEC_GET(DT_NODELABEL(mlx_sensor));
-static const struct gpio_dt_spec sda_gpio = GPIO_DT_SPEC_GET(DT_PATH(zephyr_user), mlx_sda_gpios);
-static const struct gpio_dt_spec scl_gpio = GPIO_DT_SPEC_GET(DT_PATH(zephyr_user), mlx_scl_gpios);
+static const struct i2c_dt_spec dev_i2c =
+    I2C_DT_SPEC_GET(DT_NODELABEL(mlx_sensor));
+static const struct gpio_dt_spec sda_gpio =
+    GPIO_DT_SPEC_GET(DT_PATH(zephyr_user), mlx_sda_gpios);
+static const struct gpio_dt_spec scl_gpio =
+    GPIO_DT_SPEC_GET(DT_PATH(zephyr_user), mlx_scl_gpios);
 
 // MLX90614コマンド定義
 #define MLX90614_COMMAND_ENVIRONMENT_TEMPERATURE 0x06 // 周囲温度
 #define MLX90614_COMMAND_OBJECT_TEMPERATURE 0x07      // 物体温度
 #define MLX90614_COMMAND_SLEEP 0xFF                   // スリープ
-#define MLX90614_PEC_SLEEP_PEC 0xE8                   // PEC for Sleep Command [cite: 620]
+#define MLX90614_PEC_SLEEP_PEC 0xE8 // PEC for Sleep Command [cite: 620]
 
 // 内部関数宣言
 static float read_temp(uint8_t);
@@ -61,8 +64,10 @@ int mlx90614_exit_sleep()
     pm_device_action_run(dev_i2c.bus, PM_DEVICE_ACTION_SUSPEND);
 
     // SCLとSDAをオープンドレインのプルアップ付き出力に設定
-    gpio_pin_configure_dt(&scl_gpio, GPIO_OUTPUT_HIGH | GPIO_OPEN_DRAIN | GPIO_PULL_UP);
-    gpio_pin_configure_dt(&sda_gpio, GPIO_OUTPUT_HIGH | GPIO_OPEN_DRAIN | GPIO_PULL_UP);
+    gpio_pin_configure_dt(&scl_gpio,
+                          GPIO_OUTPUT_HIGH | GPIO_OPEN_DRAIN | GPIO_PULL_UP);
+    gpio_pin_configure_dt(&sda_gpio,
+                          GPIO_OUTPUT_HIGH | GPIO_OPEN_DRAIN | GPIO_PULL_UP);
 
     k_usleep(100); // 安定まち
 
@@ -72,11 +77,12 @@ int mlx90614_exit_sleep()
 
     // SDAをHighに戻す
     gpio_pin_set_dt(&sda_gpio, 1);
-    k_usleep(100);                                              // 安定まち
-    pm_device_action_run(dev_i2c.bus, PM_DEVICE_ACTION_RESUME); // I2Cドライバを再開
+    k_usleep(100); // 安定まち
+    pm_device_action_run(dev_i2c.bus,
+                         PM_DEVICE_ACTION_RESUME); // I2Cドライバを再開
 
     // センサーの内部初期化待ち
-    k_msleep(500);
+    k_msleep(150);
 
     // 空読み
     uint8_t dummy;

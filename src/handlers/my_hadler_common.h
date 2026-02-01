@@ -23,5 +23,6 @@ enum my_state handler_ble_cmd_get_timestamp(enum my_state cur_state,
                                             void         *payload);
 enum my_state handler_ble_get_data_page_no(enum my_state cur_state,
                                            void         *payload);
+enum my_state handler_timer1_timeout(enum my_state cur_state, void *payload);
 
 #endif // MYHANDLER_WAIT_H
