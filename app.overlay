@@ -35,6 +35,17 @@
 		mlx-sda-gpios = <&gpio0 4 GPIO_ACTIVE_HIGH>;
 		mlx-scl-gpios = <&gpio0 5 GPIO_ACTIVE_HIGH>;
 	};
+	buttons {
+		compatible = "gpio-keys";
+		my_button0: button_0 {
+			gpios = <&gpio1 15 (GPIO_PULL_UP | GPIO_ACTIVE_LOW)>;
+			label = "User Button0";
+		};
+		my_button1: button_1 {
+			gpios = <&gpio1 14 (GPIO_PULL_UP | GPIO_ACTIVE_LOW)>;
+			label = "User Button1";
+		};
+	};
 };
 
 /*

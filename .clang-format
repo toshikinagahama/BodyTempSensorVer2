@@ -2,7 +2,7 @@ BasedOnStyle: LLVM
 
 BreakBeforeBraces: Allman
 
-ColumnLimit: 100
+ColumnLimit: 80
 
 # インデントにタブを使用
 #UseTab: Always

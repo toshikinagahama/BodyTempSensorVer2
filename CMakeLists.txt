@@ -20,3 +20,10 @@ foreach(header_file ${utils_headers})
     get_filename_component(header_dir ${header_file} DIRECTORY)
     target_include_directories(app PRIVATE ${header_dir})
 endforeach()
+
+# handlers 以下のサブディレクトリを自動でインクルードパスに追加する
+file(GLOB_RECURSE utils_headers "src/handlers/*.h")
+foreach(header_file ${utils_headers})
+    get_filename_component(header_dir ${header_file} DIRECTORY)
+    target_include_directories(app PRIVATE ${header_dir})
+endforeach()
