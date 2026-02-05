@@ -6,11 +6,8 @@
 #include <zephyr/kernel.h>
 
 /* --- 定数定義 --- */
-// 0.5秒周期 (計測中の更新用)
-static const uint16_t TIMER1_INTERVAL_MS = 500;
-// 5秒周期 (BLE通知などの定期間隔用)
-static const uint16_t TIMER2_INTERVAL_MS = 5000;
-// 10秒周期 (旧Timer3: タイムアウト終了用など)
+static const uint16_t TIMER1_INTERVAL_MS   = 500;
+static const uint16_t TIMER2_INTERVAL_MS   = 100;
 static const uint16_t TIMER10S_INTERVAL_MS = 10000;
 
 /* --- タイマーハンドラ (ISR) --- */

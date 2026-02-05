@@ -5,11 +5,11 @@
 #include "my_button.h"
 #include "my_display.h"
 #include "my_handler.h"
+#include "my_move_sensor.h"
 #include "my_timer.h"
 
 #include <zephyr/arch/cpu.h>
 #include <zephyr/drivers/flash.h>
-#include <zephyr/drivers/gpio.h>
 #include <zephyr/kernel.h>
 #include <zephyr/pm/device.h>
 #include <zephyr/settings/settings.h>
@@ -17,12 +17,14 @@
 
 uint8_t is_ready_drivers(void)
 {
-    if (!is_ready_mlx90614())
-        return -1;
-    if (!is_ready_my_display())
-        return -2;
-    if (!is_ready_my_button())
-        return -3;
+    if (is_ready_mlx90614())
+        return 1;
+    if (is_ready_my_display())
+        return 2;
+    if (is_ready_my_button())
+        return 3;
+    if (is_ready_my_move_sensor())
+        return 4;
     return 0;
 }
 
@@ -78,25 +80,36 @@ void read_qspi_data(void)
 
 void drivers_init()
 {
-    uint8_t ret = is_ready_drivers();
-
     my_display_init();
     my_button_init();
     my_timer_init();
     my_ble_init();
+    mlx90614_init();
+    my_move_sensor_init();
     test_qspi_flash();
     read_qspi_data();
     pm_device_action_run(
         flash_dev, PM_DEVICE_ACTION_SUSPEND); // QSPIフラッシュをサスペンド
 }
 
+// センサーが P0.11 を叩いた瞬間に呼ばれる
 int main(void)
 {
+    uint8_t ret = 0;
+    ret         = is_ready_drivers();
+    if (ret != 0)
+    {
+        DEBUG_PRINT("Driver init failed with code %d\n", ret);
+        while (1)
+        {
+            k_msleep(1000);
+        }
+    }
     drivers_init();
-    mlx90614_enter_sleep(); // センサーをスリープへ
 
     my_event      event;
     enum my_state state = STATE_WAIT;
+    enqueue(EVT_STATE_CHANGE, NULL, 0); // 初期化イベントをキューに追加
     while (1)
     {
         if (is_queue_empty())

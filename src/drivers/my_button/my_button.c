@@ -93,6 +93,8 @@ void handle_button_event(const struct gpio_dt_spec *spec, int64_t *last_time,
         // 【確実な判定】離した時間 - 押した時間
         // が「30ms以上〜2秒未満」なら短押し！
         int64_t press_duration = now - *last_time;
+        DEBUG_PRINT("now=%lld, last=%lld\n", now, *last_time);
+        DEBUG_PRINT("Button press duration: %lld ms\n", press_duration);
 
         if (press_duration >= 30 && press_duration < 2000)
         {

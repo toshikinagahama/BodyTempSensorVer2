@@ -38,6 +38,11 @@ int is_ready_mlx90614()
     return 0;
 }
 
+void mlx90614_init()
+{
+    mlx90614_enter_sleep();
+}
+
 /**
  * @brief スリープ移行関数
  *

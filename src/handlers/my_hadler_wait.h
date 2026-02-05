@@ -3,6 +3,7 @@
 
 #include "my_state.h"
 
+enum my_state handler_wait_init(enum my_state cur_state, void *payload);
 enum my_state handler_wait_button0_short_pressed(enum my_state cur_state,
                                                  void         *payload);
 enum my_state handler_wait_button0_long1_pressed(enum my_state cur_state,

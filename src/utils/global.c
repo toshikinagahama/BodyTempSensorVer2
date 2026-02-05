@@ -26,22 +26,21 @@ static const uint8_t DEFAULT_PAYLOAD[1] = {0x00};
 // キューにイベントを追加
 void enqueue(enum my_event_id id, const uint8_t *payload, size_t length)
 {
+    unsigned int key = irq_lock();
     if (count < QUEUE_SIZE)
     {
-        unsigned int key = irq_lock();
-        my_event     event;
-        event.id = id;
+        my_event *target = &event_queue[tail];
+        target->id       = id;
+        target->length   = length;
         if (payload == NULL)
         {
-            memcpy(event.payload, DEFAULT_PAYLOAD, 1);
+            target->payload[0] = 0;
         }
         else
         {
-            memcpy(event.payload, payload, length);
+            memcpy(target->payload, payload, length);
         }
-        event.length      = length;
-        event_queue[tail] = event;
-        tail              = (tail + 1) & (QUEUE_SIZE - 1);
+        tail = (tail + 1) & (QUEUE_SIZE - 1);
         count++;
         irq_unlock(key);
         k_sem_give(&evt_sem);
@@ -49,7 +48,8 @@ void enqueue(enum my_event_id id, const uint8_t *payload, size_t length)
     else
     {
         // キューが満杯の場合はイベントを破棄
-        DEBUG_PRINT("Event queue full, event ID %d discarded\n", id);
+        // DEBUG_PRINT("Event queue full, event ID %d discarded\n", id);
+        irq_unlock(key);
     }
 }
 

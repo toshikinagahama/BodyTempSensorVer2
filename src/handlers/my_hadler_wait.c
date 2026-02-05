@@ -1,19 +1,32 @@
 #include "my_hadler_wait.h"
 
 #include "common.h"
+#include "global.h"
 #include "my_ble.h"
 #include "my_display.h"
+#include "my_move_sensor.h"
 #include "my_timer.h"
 
 #include <zephyr/kernel.h>
 
 // 内部定義
 uint8_t       timer3_count = 0; // タイマー3のタイムアウト回数カウンタ
+enum my_state handler_wait_init(enum my_state cur_state, void *payload)
+{
+
+    my_display_clear(false);
+    my_display_finalize();
+    my_display_blanking_on();
+    my_timer1_stop();
+    my_timer2_stop();
+    my_move_sensor_enter_sleep();
+    return cur_state;
+}
 enum my_state handler_wait_button0_short_pressed(enum my_state cur_state,
                                                  void         *payload)
 {
     // 測定モードへ
-    my_timer1_start();
+    enqueue(EVT_STATE_CHANGE, NULL, 0);
     return STATE_MEAS;
 }
 

@@ -12,6 +12,7 @@ event_handler state_handler_table[STATE_MAX][EVT_MAX] = {
     [STATE_WAIT] =
         {
             [EVT_NOP]                     = handler_nop,
+            [EVT_STATE_CHANGE]            = handler_wait_init,
             [EVT_BLE_CONNECTED]           = handler_ble_connected,
             [EVT_BLE_DISCONNECTED]        = handler_ble_disconnected,
             [EVT_BLE_CMD_MEAS_START]      = handler_ble_cmd_meas_start,
@@ -38,6 +39,7 @@ event_handler state_handler_table[STATE_MAX][EVT_MAX] = {
 
     [STATE_MEAS] = {
         [EVT_NOP]                         = handler_nop,
+        [EVT_STATE_CHANGE]                = handler_meas_init,
         [EVT_BLE_CONNECTED]               = handler_ble_connected,
         [EVT_BLE_DISCONNECTED]            = handler_ble_disconnected,
         [EVT_BLE_CMD_MEAS_START]          = handler_ble_cmd_meas_start,
@@ -51,4 +53,5 @@ event_handler state_handler_table[STATE_MAX][EVT_MAX] = {
         [EVT_BLE_CMD_GET_DATA_PAGE_NO]    = handler_ble_get_data_page_no,
         [EVT_BUTTON0_SHORT_PRESSED]       = handler_meas_button0_short_pressed,
         [EVT_TIMER1_TIMEOUT]              = handler_meas_timer1_timeout,
+        [EVT_TIMER2_TIMEOUT]              = handler_meas_timer2_timeout,
     }};
