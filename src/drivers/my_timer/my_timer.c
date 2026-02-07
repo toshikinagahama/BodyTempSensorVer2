@@ -6,7 +6,7 @@
 #include <zephyr/kernel.h>
 
 /* --- 定数定義 --- */
-static const uint16_t TIMER1_INTERVAL_MS   = 500;
+static const uint16_t TIMER1_INTERVAL_MS   = 1000;
 static const uint16_t TIMER2_INTERVAL_MS   = 100;
 static const uint16_t TIMER10S_INTERVAL_MS = 10000;
 

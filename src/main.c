@@ -9,7 +9,10 @@
 #include "my_timer.h"
 
 #include <zephyr/arch/cpu.h>
+#include <zephyr/device.h>
 #include <zephyr/drivers/flash.h>
+#include <zephyr/drivers/i2c.h>
+#include <zephyr/drivers/sensor.h>
 #include <zephyr/kernel.h>
 #include <zephyr/pm/device.h>
 #include <zephyr/settings/settings.h>
@@ -91,8 +94,20 @@ void drivers_init()
     pm_device_action_run(
         flash_dev, PM_DEVICE_ACTION_SUSPEND); // QSPIフラッシュをサスペンド
 }
+/* I2Cデバイスの取得 */
+static const struct i2c_dt_spec dev_i2c =
+    I2C_DT_SPEC_GET(DT_NODELABEL(ppg_sensor));
 
-// センサーが P0.11 を叩いた瞬間に呼ばれる
+// レジスタアドレス
+#define REG_MODE_CONFIG 0x06
+#define REG_LED_CONFIG 0x09
+#define REG_FIFO_DATA 0x05
+#define REG_FIFO_WR_PTR 0x02
+#define REG_FIFO_RD_PTR 0x04
+#define REG_INT_STATUS 0x00
+#define REG_SPO2_CONFIG 0x07 // これが重要
+#define REG_PART_ID 0xFF
+
 int main(void)
 {
     uint8_t ret = 0;
@@ -107,6 +122,42 @@ int main(void)
     }
     drivers_init();
 
+    if (!device_is_ready(dev_i2c.bus))
+    {
+        printk("I2C bus not ready\n");
+        while (1)
+        {
+            k_msleep(1000);
+        }
+    }
+    uint8_t val;
+
+    i2c_reg_write_byte_dt(&dev_i2c, REG_MODE_CONFIG, 0x03);
+    i2c_reg_write_byte_dt(&dev_i2c, REG_SPO2_CONFIG, 0x04);
+    i2c_reg_write_byte_dt(&dev_i2c, REG_LED_CONFIG, 0b00010000);
+    i2c_reg_read_byte_dt(&dev_i2c, REG_INT_STATUS, &val);
+    i2c_reg_write_byte_dt(&dev_i2c, REG_MODE_CONFIG, 0x83);
+
+    // uint8_t  buffer[4]; // Red(2bytes) + IR(2bytes)
+    // uint32_t loop_count = 0;
+    // while (1)
+    // {
+    //     /* 3. FIFOレジスタから4バイト読み出し */
+    //     uint8_t reg = REG_FIFO_DATA;
+    //     if (i2c_write_read_dt(&dev_i2c, &reg, 1, buffer, 4) == 0)
+    //     {
+    //         // MAX30100は上位8bitが先
+    //         uint16_t red_raw = (buffer[0] << 8) | buffer[1];
+
+    //         // シリアルプロッタ用に出力
+    //         if (loop_count % 10 == 0)
+    //             printk("%u\n", red_raw);
+    //     }
+
+    //     k_msleep(10); // 100Hz相当
+    //     loop_count++;
+    // }
+    /////////////////////////////////////////////////////////////////////////////
     my_event      event;
     enum my_state state = STATE_WAIT;
     enqueue(EVT_STATE_CHANGE, NULL, 0); // 初期化イベントをキューに追加

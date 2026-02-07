@@ -28,6 +28,10 @@
 		com-sequential;
 		prechargep = <0x22>;
 	};
+	ppg_sensor: max30100_raw@57 {
+		compatible = "i2c-device";
+		reg = <0x57>;
+	};
 };
 
 / {

@@ -15,6 +15,7 @@ int      count = 0;
 // キューが空かどうかをチェック
 int is_queue_empty(void)
 {
+    // DEBUG_PRINT("Queue count: %d\n", count);
     return count == 0;
 }
 
@@ -56,15 +57,16 @@ void enqueue(enum my_event_id id, const uint8_t *payload, size_t length)
 // キューからイベントを取り出す
 my_event dequeue(void)
 {
+    unsigned int key = irq_lock();
     if (count > 0)
     {
-        unsigned int key   = irq_lock();
-        my_event     event = event_queue[head];
-        head               = (head + 1) % (QUEUE_SIZE - 1);
+        my_event event = event_queue[head];
+        head           = (head + 1) & (QUEUE_SIZE - 1);
         count--;
         irq_unlock(key);
         return event;
     }
+    irq_unlock(key);
     // キューが空の場合にEVT_NOPを返す
     my_event empty_event = {.id = EVT_NOP, .length = 0};
     return empty_event;
